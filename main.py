@@ -22,19 +22,17 @@ def get_trends():
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     trends = []
 
-    # 複数のセレクタ候補に対応
-    items = (
-        soup.select(".trend-card .keyword")
-        or soup.select(".item .name")
-        or soup.select("a.word")
-    )
+    # ページ内のすべてのリンクやテキストからトレンドになりそうなものを幅広く探す
+    # Twittrendのリスト部分を広く指定
+    for a in soup.select("a"):
+      text = a.get_text(strip=True)
+      # 文字数が適切で、URLっぽくないものをトレンド候補とする
+      if 2 <= len(text) <= 20 and not text.startswith("http"):
+        if text not in [t["keyword"] for t in trends]:
+          trends.append({"datetime": now, "keyword": text})
 
-    for item in items:
-      word = item.get_text(strip=True)
-      if word and word not in [t["keyword"] for t in trends]:
-        trends.append({"datetime": now, "keyword": word})
-
-    return trends
+    # 上位50件程度に絞る
+    return trends[:50]
   except Exception as e:
     print(f"エラー発生: {e}")
     return []
