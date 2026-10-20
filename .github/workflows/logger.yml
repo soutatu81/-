@@ -2,13 +2,15 @@ name: X Trend Logger
 
 on:
   schedule:
-    # 1時間ごとに自動実行
     - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # GitHub Actionsにファイル作成・プッシュの権限を明示的に与える
+    permissions:
+      contents: write
 
     steps:
     - name: 画面コードの取得
@@ -31,10 +33,12 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        # ファイルが存在する場合のみGitに追加してプッシュする
+        git status
         if [ -f trend_log.csv ]; then
           git add trend_log.csv
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto update trend log [skip ci]" && git push)
+          git commit -m "Auto update trend log [skip ci]" || echo "No changes to commit"
+          git push
         else
-          echo "trend_log.csv が見つからないためスキップします"
+          echo "trend_log.csv が見つかりませんでした"
         fi
+        
