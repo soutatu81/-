@@ -1,0 +1,36 @@
+name: X Trend Logger
+
+on:
+  schedule:
+    # 1時間ごとに自動実行（Cron形式）
+    - cron: '0 * * * *'
+  # 手動でテスト実行するための設定
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 画面コードの取得
+      uses: actions/checkout@v4
+
+    - name: Pythonのセットアップ
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: 必要なライブラリのインストール
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests beautifulsoup4 pandas
+
+    - name: Pythonスクリプトの実行
+      run: python main.py
+
+    - name: 取得したデータをGitHubに保存（Git Commit & Push）
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add trend_log.csv
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Auto update trend log [skip ci]" && git push)
